@@ -47,7 +47,7 @@ describe('savedSearch router', () => {
       .send(MOCK_SAVED_SEARCH)
       .expect(200);
     const updatedSavedSearch = await agent
-      .patch(`/saved-search/${savedSearch.body._id}`)
+      .patch(`/saved-search/${savedSearch.body.id}`) // Use .id
       .send({ name: 'warning' })
       .expect(200);
     expect(updatedSavedSearch.body.name).toBe('warning');
@@ -72,13 +72,14 @@ describe('savedSearch router', () => {
       .post('/alerts')
       .send(
         makeSavedSearchAlertInput({
-          savedSearchId: savedSearch.body._id,
+          savedSearchId: savedSearch.body.id, // Use .id
         }),
       )
       .expect(200);
-    await agent.delete(`/saved-search/${savedSearch.body._id}`).expect(204);
+    await agent.delete(`/saved-search/${savedSearch.body.id}`).expect(204); // Use .id
     const savedSearches = await agent.get('/saved-search').expect(200);
     expect(savedSearches.body.length).toBe(0);
-    expect(await Alert.findById(alert.body.data._id)).toBeNull();
+    // Use Sequelize's findByPk
+    expect(await Alert.findByPk(alert.body.data.id)).toBeNull(); // Use .id
   });
 });
