@@ -21,7 +21,7 @@ jobs:
           cache-dependency-path: 'yarn.lock'
           cache: 'yarn'
       - name: Install root dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
       - name: Build dependencies
         run: make ci-build
       - name: Install core libs
@@ -59,7 +59,7 @@ jobs:
           cache-dependency-path: 'yarn.lock'
           cache: 'yarn'
       - name: Install root dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
       - name: Expose GitHub Runtime
         uses: crazy-max/ghaction-github-runtime@v2
       - name: Spin up docker services
