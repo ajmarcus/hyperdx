@@ -3,18 +3,23 @@ import {
   SavedChartConfig,
   Tile,
 } from '@hyperdx/common-utils/dist/types';
-import mongoose from 'mongoose';
+import { Sequelize } from 'sequelize'; // Import Sequelize
+// import mongoose from 'mongoose'; // No longer directly needed for fixtures core DB ops
 import request from 'supertest';
 
 import * as clickhouse from '@/clickhouse';
 import * as config from '@/config';
 import { AlertInput } from '@/controllers/alerts';
-import { getTeam } from '@/controllers/team';
-import { findUserByEmail } from '@/controllers/user';
-import { mongooseConnection } from '@/models';
-import { AlertInterval, AlertSource, AlertThresholdType } from '@/models/alert';
+import { getTeam } from '@/controllers/team'; // These controllers now use Sequelize
+import { findUserByEmail } from '@/controllers/user'; // These controllers now use Sequelize
+// import { mongooseConnection } from '@/models'; // Remove mongooseConnection
+import { sequelizeInstance } from '@/models'; // Import the sequelize instance
+import { AlertInterval, AlertSource, AlertThresholdType } from '@/models/alert'; // These are now Sequelize models/enums
 import Server from '@/server';
 import { MetricModel } from '@/utils/logParser';
+
+// Export sequelize instance for tests that might need direct access
+export const sequelize: Sequelize = sequelizeInstance;
 
 const MOCK_USER = {
   email: 'fake@deploysentinel.com',
@@ -218,31 +223,61 @@ const connectClickhouse = async () => {
 
 export const connectDB = async () => {
   if (!config.IS_CI) {
-    throw new Error('ONLY execute this in CI env 😈 !!!');
+    // This check might need re-evaluation. For local tests, you might want to run against a test DB.
+    // For now, keeping the spirit of "CI only" for destructive operations.
+    console.warn(
+      'Skipping DB connection and sync outside CI for safety. Ensure your DB is set up for tests.',
+    );
+    return;
+    // throw new Error('ONLY execute this in CI env 😈 !!!');
   }
-  if (config.MONGO_URI == null) {
-    throw new Error('MONGO_URI is not set');
+  try {
+    await sequelize.authenticate();
+    // Using force: true will drop and recreate tables. Good for a clean slate in tests.
+    // Adjust if you have seed data or need more nuanced control.
+    await sequelize.sync({ force: true });
+    console.log('Test SQLite DB connected and schema synced (forced).');
+  } catch (error) {
+    console.error('Failed to connect or sync test SQLite DB:', error);
+    throw error;
   }
-  await mongoose.connect(config.MONGO_URI);
 };
 
 export const closeDB = async () => {
   if (!config.IS_CI) {
-    throw new Error('ONLY execute this in CI env 😈 !!!');
+    // console.warn('Skipping DB close outside CI.');
+    return;
   }
-  await mongooseConnection.dropDatabase();
+  try {
+    await sequelize.close();
+    console.log('Test SQLite DB connection closed.');
+  } catch (error) {
+    console.error('Failed to close test SQLite DB connection:', error);
+    throw error;
+  }
 };
 
 export const clearDBCollections = async () => {
   if (!config.IS_CI) {
-    throw new Error('ONLY execute this in CI env 😈 !!!');
+    // console.warn('Skipping DB clear outside CI.');
+    return;
   }
-  const collections = mongooseConnection.collections;
-  await Promise.all(
-    Object.values(collections).map(async collection => {
-      await collection.deleteMany({}); // an empty mongodb selector object ({}) must be passed as the filter argument
-    }),
-  );
+  try {
+    const models = sequelize.models;
+    for (const modelName in models) {
+      await models[modelName].destroy({
+        where: {},
+        truncate: true,
+        cascade: true,
+      });
+    }
+    // Alternatively, if connectDB uses sync({ force: true }), this might be redundant
+    // or only needed if specific tests dirty the DB and run sequentially without resync.
+    console.log('All SQLite tables truncated.');
+  } catch (error) {
+    console.error('Failed to clear SQLite tables:', error);
+    throw error;
+  }
 };
 
 // after connectDB

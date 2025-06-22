@@ -1,75 +1,95 @@
-import { ObjectId } from 'mongodb';
-import mongoose, { Schema } from 'mongoose';
+import { DataTypes, Model } from 'sequelize';
+
+import { sequelizeInstance } from './index';
+// import Team from './team'; // For associations
 
 export enum WebhookService {
   Slack = 'slack',
   Generic = 'generic',
 }
 
-interface MongooseMap extends Map<string, string> {
-  // https://mongoosejs.com/docs/api/map.html#MongooseMap.prototype.toJSON()
-  // Converts this map to a native JavaScript Map for JSON.stringify(). Set the flattenMaps option to convert this map to a POJO instead.
-  // doc.myMap.toJSON() instanceof Map; // true
-  // doc.myMap.toJSON({ flattenMaps: true }) instanceof Map; // false
-  toJSON: (options?: {
-    flattenMaps?: boolean;
-  }) => { [key: string]: any } | Map<string, any>;
+// For queryParams and headers, which were Map in Mongoose.
+// We'll use JSONB to store object-like data (key-value pairs).
+interface KeyValuePairs {
+  [key: string]: string;
 }
 
-export interface IWebhook {
-  _id: ObjectId;
-  createdAt: Date;
-  name: string;
-  service: WebhookService;
-  team: ObjectId;
-  updatedAt: Date;
-  url?: string;
-  description?: string;
-  // reminder to serialize/convert the Mongoose model instance to a plain javascript object when using
-  // to strip the additional properties that are related to the Mongoose internal representation -> webhook.headers.toJSON()
-  queryParams?: MongooseMap;
-  headers?: MongooseMap;
-  body?: string;
+class Webhook extends Model {
+  public id!: string; // Adding a primary key
+  public teamId!: string; // Foreign key to Team model
+  public service!: WebhookService;
+  public name!: string;
+  public url?: string;
+  public description?: string;
+  public queryParams?: KeyValuePairs;
+  public headers?: KeyValuePairs;
+  public body?: string; // Could be JSON string, text, etc.
+
+  // Timestamps
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
-const WebhookSchema = new Schema<IWebhook>(
+Webhook.init(
   {
-    team: { type: Schema.Types.ObjectId, ref: 'Team' },
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    teamId: {
+      // Foreign key for Team
+      type: DataTypes.UUID,
+      allowNull: false,
+      // references: { model: 'Teams', key: 'id' } // Define association later
+    },
     service: {
-      type: String,
-      enum: Object.values(WebhookService),
-      required: true,
+      type: DataTypes.ENUM(...Object.values(WebhookService)),
+      allowNull: false,
     },
     name: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     url: {
-      type: String,
-      required: false,
+      type: DataTypes.STRING, // Consider DataTypes.TEXT if URLs can be very long
+      allowNull: true, // Was required: false
+      validate: {
+        isUrl: true, // Add URL validation if appropriate
+      },
     },
     description: {
-      type: String,
-      required: false,
+      type: DataTypes.TEXT, // TEXT for longer descriptions
+      allowNull: true,
     },
     queryParams: {
-      type: Map,
-      of: String,
-      required: false,
+      type: DataTypes.JSONB, // Using JSONB for Map type
+      allowNull: true,
     },
     headers: {
-      type: Map,
-      of: String,
-      required: false,
+      type: DataTypes.JSONB, // Using JSONB for Map type
+      allowNull: true,
     },
     body: {
-      type: String,
-      required: false,
+      type: DataTypes.TEXT, // TEXT for request body content
+      allowNull: true,
     },
   },
-  { timestamps: true },
+  {
+    sequelize: sequelizeInstance,
+    modelName: 'Webhook',
+    timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['teamId', 'service', 'name'],
+      },
+    ],
+  },
 );
 
-WebhookSchema.index({ team: 1, service: 1, name: 1 }, { unique: true });
+// Define associations here
+// Example:
+// Webhook.belongsTo(Team, { foreignKey: 'teamId' });
 
-export default mongoose.model<IWebhook>('Webhook', WebhookSchema);
+export default Webhook;

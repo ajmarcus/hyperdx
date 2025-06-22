@@ -1,7 +1,10 @@
-import mongoose, { Schema } from 'mongoose';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
-import type { ObjectId } from '.';
-import Team from './team';
+import { sequelizeInstance } from './index';
+// import Team from './team'; // We'll need to define Team model later for associations
+// import User from './user'; // We'll need to define User model later for associations
+// import SavedSearch from './savedSearch'; // We'll need to define SavedSearch model later for associations
+// import Dashboard from './dashboard'; // We'll need to define Dashboard model later for associations
 
 export enum AlertThresholdType {
   ABOVE = 'above',
@@ -15,7 +18,6 @@ export enum AlertState {
   OK = 'OK',
 }
 
-// follow 'ms' pkg formats
 export type AlertInterval =
   | '1m'
   | '5m'
@@ -40,123 +42,127 @@ export enum AlertSource {
   TILE = 'tile',
 }
 
-export interface IAlert {
-  _id: ObjectId;
-  channel: AlertChannel;
-  interval: AlertInterval;
-  source?: AlertSource;
-  state: AlertState;
-  team: ObjectId;
-  threshold: number;
-  thresholdType: AlertThresholdType;
-
-  // Message template
-  name?: string | null;
-  message?: string | null;
-
-  // SavedSearch alerts
-  groupBy?: string;
-  savedSearch?: ObjectId;
-
-  // Tile alerts
-  dashboard?: ObjectId;
-  tileId?: string;
-
-  // Silenced
-  silenced?: {
-    by?: ObjectId;
-    at: Date;
-    until: Date;
-  };
+interface SilencedInfo {
+  by?: string; // User ID
+  at: Date;
+  until: Date;
 }
 
-export type AlertDocument = mongoose.HydratedDocument<IAlert>;
+class Alert extends Model {
+  public id!: string; // Changed from ObjectId to string (UUID)
+  public channel!: AlertChannel;
+  public interval!: AlertInterval;
+  public source?: AlertSource;
+  public state!: AlertState;
+  public teamId!: string; // Changed from ObjectId to string (UUID)
+  public threshold!: number;
+  public thresholdType?: AlertThresholdType;
 
-const AlertSchema = new Schema<IAlert>(
+  // Message template
+  public name?: string | null;
+  public message?: string | null;
+
+  // SavedSearch alerts
+  public groupBy?: string;
+  public savedSearchId?: string; // Changed from ObjectId to string (UUID)
+
+  // Tile alerts
+  public dashboardId?: string; // Changed from ObjectId to string (UUID)
+  public tileId?: string;
+
+  // Silenced
+  public silenced?: SilencedInfo;
+
+  // Timestamps
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+Alert.init(
   {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
     threshold: {
-      type: Number,
-      required: true,
+      type: DataTypes.FLOAT, // Using FLOAT for number
+      allowNull: false,
     },
     thresholdType: {
-      type: String,
-      enum: AlertThresholdType,
-      required: false,
+      type: DataTypes.ENUM(...Object.values(AlertThresholdType)),
+      allowNull: true, // Was false, but schema had it as not required
     },
     interval: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING, // Assuming AlertInterval values are stored as strings
+      allowNull: false,
     },
-    channel: Schema.Types.Mixed, // slack, email, etc
+    channel: {
+      type: DataTypes.JSONB, // Using JSONB for complex object type
+      allowNull: false, // Assuming channel is required
+    },
     state: {
-      type: String,
-      enum: AlertState,
-      default: AlertState.OK,
+      type: DataTypes.ENUM(...Object.values(AlertState)),
+      defaultValue: AlertState.OK,
+      allowNull: false,
     },
     source: {
-      type: String,
-      required: false,
-      default: AlertSource.SAVED_SEARCH,
+      type: DataTypes.ENUM(...Object.values(AlertSource)),
+      defaultValue: AlertSource.SAVED_SEARCH,
+      allowNull: true, // Was false, but schema had it as not required
     },
-    team: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: Team.modelName,
+    teamId: {
+      // Foreign key for Team
+      type: DataTypes.UUID,
+      allowNull: false, // Assuming a team is always required
+      // references: { model: 'Teams', key: 'id' } // Define association later
     },
-
-    // Message template
     name: {
-      type: String,
-      required: false,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     message: {
-      type: String,
-      required: false,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-
-    // Log alerts
-    savedSearch: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'SavedSearch',
-      required: false,
+    savedSearchId: {
+      // Foreign key for SavedSearch
+      type: DataTypes.UUID,
+      allowNull: true,
+      // references: { model: 'SavedSearches', key: 'id' } // Define association later
     },
     groupBy: {
-      type: String,
-      required: false,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-
-    // Chart alerts
-    dashboard: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Dashboard',
-      required: false,
+    dashboardId: {
+      // Foreign key for Dashboard
+      type: DataTypes.UUID,
+      allowNull: true,
+      // references: { model: 'Dashboards', key: 'id' } // Define association later
     },
     tileId: {
-      type: String,
-      required: false,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     silenced: {
-      required: false,
-      type: {
-        by: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-          required: false,
-        },
-        at: {
-          type: Date,
-          required: true,
-        },
-        until: {
-          type: Date,
-          required: true,
-        },
-        required: false,
-      },
+      type: DataTypes.JSONB, // Using JSONB for SilencedInfo
+      allowNull: true,
     },
   },
   {
+    sequelize: sequelizeInstance,
+    modelName: 'Alert',
     timestamps: true,
   },
 );
 
-export default mongoose.model<IAlert>('Alert', AlertSchema);
+// Define associations here after all models are defined
+// Example:
+// Alert.belongsTo(Team, { foreignKey: 'teamId' });
+// Alert.belongsTo(SavedSearch, { foreignKey: 'savedSearchId' });
+// Alert.belongsTo(Dashboard, { foreignKey: 'dashboardId' });
+// If 'by' in silenced refers to a User:
+// Alert.belongsTo(User, { foreignKey: 'silenced.by', constraints: false, as: 'SilencedByUser' });
+
+export default Alert;

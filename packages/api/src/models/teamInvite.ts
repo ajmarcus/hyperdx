@@ -1,42 +1,68 @@
-import mongoose, { Schema } from 'mongoose';
-import ms from 'ms';
+import { DataTypes, Model } from 'sequelize';
 
-export interface ITeamInvite {
-  createdAt: Date;
-  email: string;
-  name?: string;
-  teamId: string;
-  token: string;
-  updatedAt: Date;
+import { sequelizeInstance } from './index';
+// import Team from './team'; // For associations
+
+class TeamInvite extends Model {
+  public id!: string; // Adding a primary key
+  public teamId!: string; // Foreign key to Team model
+  public email!: string;
+  public name?: string;
+  public token!: string;
+
+  // Timestamps
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
-const TeamInviteSchema = new Schema(
+TeamInvite.init(
   {
-    teamId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Team',
-      required: true,
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    name: String,
+    teamId: {
+      // Foreign key for Team
+      type: DataTypes.UUID,
+      allowNull: false,
+      // references: { model: 'Teams', key: 'id' } // Define association later
+    },
     email: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEmail: true, // Add email validation
+      },
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     token: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING, // Or DataTypes.UUID if the token is a UUID
+      allowNull: false,
+      unique: true, // Tokens should be unique
     },
   },
   {
+    sequelize: sequelizeInstance,
+    modelName: 'TeamInvite',
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['teamId', 'email'],
+      },
+      // TTL index { createdAt: 1 }, { expireAfterSeconds: ms('30d') / 1000 }
+      // As mentioned with AlertHistory, this needs to be handled at the application
+      // or database level (e.g., cron job for deletion).
+    ],
   },
 );
 
-TeamInviteSchema.index(
-  { createdAt: 1 },
-  { expireAfterSeconds: ms('30d') / 1000 },
-);
+// Define associations here
+// Example:
+// TeamInvite.belongsTo(Team, { foreignKey: 'teamId' });
 
-TeamInviteSchema.index({ teamId: 1, email: 1 }, { unique: true });
-
-export default mongoose.model<ITeamInvite>('TeamInvite', TeamInviteSchema);
+export default TeamInvite;

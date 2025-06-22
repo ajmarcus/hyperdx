@@ -496,13 +496,13 @@ export class ClickhouseClient {
     } else if (isNode) {
       const { createClient } = await import('@clickhouse/client');
       const _client = createClient({
-        url: this.host,
+        host: this.host,
         username: this.username,
         password: this.password,
       });
 
       // TODO: Custom error handling
-      return _client.query<Format>({
+      return _client.query({
         query,
         query_params,
         format,

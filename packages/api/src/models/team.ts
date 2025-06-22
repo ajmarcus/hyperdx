@@ -1,42 +1,58 @@
-import mongoose, { Schema } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import { DataTypes, Model } from 'sequelize';
 
-type ObjectId = mongoose.Types.ObjectId;
+import { sequelizeInstance } from './index';
 
-export interface ITeam {
-  _id: ObjectId;
-  name: string;
-  allowedAuthMethods?: 'password'[];
-  apiKey: string;
-  hookId: string;
-  collectorAuthenticationEnforced: boolean;
+class Team extends Model {
+  public id!: string; // Changed from ObjectId to string (UUID)
+  public name!: string;
+  public allowedAuthMethods?: string[]; // Representing array of strings
+  public apiKey!: string;
+  public hookId!: string;
+  public collectorAuthenticationEnforced!: boolean;
+
+  // Timestamps
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
-export default mongoose.model<ITeam>(
-  'Team',
-  new Schema<ITeam>(
-    {
-      name: String,
-      allowedAuthMethods: [String],
-      hookId: {
-        type: String,
-        default: function genUUID() {
-          return uuidv4();
-        },
-      },
-      apiKey: {
-        type: String,
-        default: function genUUID() {
-          return uuidv4();
-        },
-      },
-      collectorAuthenticationEnforced: {
-        type: Boolean,
-        default: false,
-      },
+Team.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    {
-      timestamps: true,
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false, // Assuming name is required
     },
-  ),
+    allowedAuthMethods: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: true, // Based on Mongoose schema (optional field)
+    },
+    apiKey: {
+      type: DataTypes.UUID, // Storing as UUID
+      defaultValue: DataTypes.UUIDV4, // Auto-generate UUID
+      allowNull: false,
+      unique: true, // API keys should be unique
+    },
+    hookId: {
+      type: DataTypes.UUID, // Storing as UUID
+      defaultValue: DataTypes.UUIDV4, // Auto-generate UUID
+      allowNull: false,
+      unique: true, // Hook IDs should be unique
+    },
+    collectorAuthenticationEnforced: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize: sequelizeInstance,
+    modelName: 'Team',
+    timestamps: true,
+  },
 );
+
+export default Team;

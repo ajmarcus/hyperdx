@@ -206,7 +206,7 @@ describe('dashboard router', () => {
           .post('/alerts')
           .send(
             makeAlertInput({
-              dashboardId: dashboard._id,
+              dashboardId: dashboard.id, // Use .id
               tileId: tile.id,
             }),
           )
@@ -228,7 +228,7 @@ describe('dashboard router', () => {
       .expect(200)
       .then(res => res.body[0]);
     await agent
-      .patch(`/dashboards/${dashboard._id}`)
+      .patch(`/dashboards/${dashboard.id}`) // Use .id
       .send({
         ...dashboardPreDelete,
         tiles: dashboardPreDelete.tiles.slice(1),
