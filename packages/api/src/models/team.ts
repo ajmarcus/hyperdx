@@ -1,4 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
+
 import { sequelizeInstance } from './index';
 
 class Team extends Model {

@@ -91,13 +91,13 @@ Object {
       email: 'user1@example.com',
       name: 'User 1 Name', // Assuming 'name' is a required field
       password: 'password1', // Assuming 'password' is a required field
-      teamId: team.id // Use team.id for Sequelize
+      teamId: team.id, // Use team.id for Sequelize
     });
     const user2 = await User.create({
       email: 'user2@example.com',
       name: 'User 2 Name', // Assuming 'name' is a required field
       password: 'password2', // Assuming 'password' is a required field
-      teamId: team.id // Use team.id for Sequelize
+      teamId: team.id, // Use team.id for Sequelize
     });
     const resp = await agent.get('/team/members').expect(200);
 
@@ -105,7 +105,11 @@ Object {
     // The fields like `hasPasswordAuth` and `isCurrentUser` are added by the endpoint logic.
     // Sorting by a stable key like email can help make snapshots more predictable.
     const sortedData = _.sortBy(resp.body.data, 'email');
-    expect(sortedData.map(u => _.omit(u, ['id', 'teamId', 'avatar', 'createdAt', 'updatedAt']))).toMatchInlineSnapshot(`
+    expect(
+      sortedData.map(u =>
+        _.omit(u, ['id', 'teamId', 'avatar', 'createdAt', 'updatedAt']),
+      ),
+    ).toMatchInlineSnapshot(`
 Array [
   Object {
     "email": "fake@deploysentinel.com",
@@ -140,7 +144,7 @@ Array [
       .expect(200);
     // Use Sequelize's findOne with where clause and teamId context
     const teamInvite = await TeamInvite.findOne({
-      where: { email: 'user3@example.com', teamId: team.id }
+      where: { email: 'user3@example.com', teamId: team.id },
     });
     if (teamInvite == null) {
       throw new Error('TeamInvite not found');
@@ -190,7 +194,8 @@ Array [
   it('DELETE /team/member/:userId', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    const user1 = await User.create({ // Sequelize create
+    const user1 = await User.create({
+      // Sequelize create
       email: 'user1@example.com',
       name: 'User to delete', // Assuming name is required
       password: 'passworddel', // Assuming password is required
@@ -207,7 +212,8 @@ Array [
   it('DELETE /team/invitation/:teamInviteId', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    const invite = await TeamInvite.create({ // Sequelize create
+    const invite = await TeamInvite.create({
+      // Sequelize create
       email: 'fake_invite@example.com',
       name: 'Fake Invite',
       teamId: team.id, // Use .id for team's PK

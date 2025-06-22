@@ -1,4 +1,5 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
+
 import { sequelizeInstance } from './index';
 // import Team from './team'; // We'll need to define Team model later for associations
 // import User from './user'; // We'll need to define User model later for associations
@@ -110,7 +111,8 @@ Alert.init(
       defaultValue: AlertSource.SAVED_SEARCH,
       allowNull: true, // Was false, but schema had it as not required
     },
-    teamId: { // Foreign key for Team
+    teamId: {
+      // Foreign key for Team
       type: DataTypes.UUID,
       allowNull: false, // Assuming a team is always required
       // references: { model: 'Teams', key: 'id' } // Define association later
@@ -123,7 +125,8 @@ Alert.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    savedSearchId: { // Foreign key for SavedSearch
+    savedSearchId: {
+      // Foreign key for SavedSearch
       type: DataTypes.UUID,
       allowNull: true,
       // references: { model: 'SavedSearches', key: 'id' } // Define association later
@@ -132,7 +135,8 @@ Alert.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    dashboardId: { // Foreign key for Dashboard
+    dashboardId: {
+      // Foreign key for Dashboard
       type: DataTypes.UUID,
       allowNull: true,
       // references: { model: 'Dashboards', key: 'id' } // Define association later
@@ -160,6 +164,5 @@ Alert.init(
 // Alert.belongsTo(Dashboard, { foreignKey: 'dashboardId' });
 // If 'by' in silenced refers to a User:
 // Alert.belongsTo(User, { foreignKey: 'silenced.by', constraints: false, as: 'SilencedByUser' });
-
 
 export default Alert;

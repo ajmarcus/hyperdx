@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+
 import * as config from '@/config';
 import logger from '@/utils/logger';
 
@@ -19,15 +20,15 @@ export const connectDB = async () => {
 export const sequelizeInstance = sequelize;
 
 // Import all models
-import User from './user';
-import Team from './team';
-import TeamInvite from './teamInvite';
-import Source from './source';
-import SavedSearch from './savedSearch';
-import Dashboard from './dashboard';
-import Connection from './connection';
 import Alert from './alert';
 import AlertHistory from './alertHistory';
+import Connection from './connection';
+import Dashboard from './dashboard';
+import SavedSearch from './savedSearch';
+import Source from './source';
+import Team from './team';
+import TeamInvite from './teamInvite';
+import User from './user';
 import Webhook from './webhook';
 
 // Define Associations
@@ -69,8 +70,16 @@ Connection.hasMany(Source, { foreignKey: 'connectionId', as: 'sources' });
 
 // Alert associations
 Alert.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
-Alert.belongsTo(SavedSearch, { foreignKey: 'savedSearchId', as: 'savedSearch', required: false });
-Alert.belongsTo(Dashboard, { foreignKey: 'dashboardId', as: 'dashboard', required: false });
+Alert.belongsTo(SavedSearch, {
+  foreignKey: 'savedSearchId',
+  as: 'savedSearch',
+  required: false,
+});
+Alert.belongsTo(Dashboard, {
+  foreignKey: 'dashboardId',
+  as: 'dashboard',
+  required: false,
+});
 // Alert.belongsTo(User, { foreignKey: 'silenced.by', constraints: false, as: 'SilencedByUser' }); // For silenced.by if it's a direct FK
 Alert.hasMany(AlertHistory, { foreignKey: 'alertId', as: 'history' });
 
@@ -81,15 +90,15 @@ AlertHistory.belongsTo(Alert, { foreignKey: 'alertId', as: 'alert' });
 Webhook.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
 
 export {
-  User,
-  Team,
-  TeamInvite,
-  Source,
-  SavedSearch,
-  Dashboard,
-  Connection,
   Alert,
   AlertHistory,
-  Webhook,
+  Connection,
+  Dashboard,
+  SavedSearch,
   sequelizeInstance as sequelize, // export instance as 'sequelize' for convenience
+  Source,
+  Team,
+  TeamInvite,
+  User,
+  Webhook,
 };

@@ -1,4 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
+
 import { sequelizeInstance } from './index';
 // import Team from './team'; // For associations
 // import Source from './source'; // For associations
@@ -31,12 +32,14 @@ SavedSearch.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    teamId: { // Foreign key for Team
+    teamId: {
+      // Foreign key for Team
       type: DataTypes.UUID,
       allowNull: false,
       // references: { model: 'Teams', key: 'id' } // Define association later
     },
-    sourceId: { // Foreign key for Source
+    sourceId: {
+      // Foreign key for Source
       type: DataTypes.UUID,
       allowNull: false,
       // references: { model: 'Sources', key: 'id' } // Define association later

@@ -2,7 +2,8 @@ import { createTeam } from '@/controllers/team'; // This controller should now u
 import { clearDBCollections, closeDB, connectDB, sequelize } from '@/fixtures'; // Assuming sequelize is exported from fixtures
 import Team from '@/models/team'; // This is now a Sequelize model
 
-describe('Team model and basic queries', () => { // Updated description
+describe('Team model and basic queries', () => {
+  // Updated description
   beforeAll(async () => {
     await connectDB(); // Connects and syncs schema
   });
@@ -36,7 +37,9 @@ describe('Team model and basic queries', () => { // Updated description
     // The original test might have relied on Mongoose's more dynamic schema handling.
 
     // A more Sequelize-idiomatic test for non-matching properties:
-    const foundByNonMatchingName = await Team.findAll({ where: { name: 'NonExistent Team' } });
+    const foundByNonMatchingName = await Team.findAll({
+      where: { name: 'NonExistent Team' },
+    });
     expect(foundByNonMatchingName).toHaveLength(0);
   });
 });

@@ -1,4 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
+
 import { sequelizeInstance } from './index';
 // import Team from './team'; // For associations
 
@@ -36,7 +37,8 @@ Webhook.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    teamId: { // Foreign key for Team
+    teamId: {
+      // Foreign key for Team
       type: DataTypes.UUID,
       allowNull: false,
       // references: { model: 'Teams', key: 'id' } // Define association later
@@ -66,7 +68,7 @@ Webhook.init(
     },
     headers: {
       type: DataTypes.JSONB, // Using JSONB for Map type
-      allowNull:true,
+      allowNull: true,
     },
     body: {
       type: DataTypes.TEXT, // TEXT for request body content

@@ -3,9 +3,9 @@ import {
   SavedChartConfig,
   Tile,
 } from '@hyperdx/common-utils/dist/types';
+import { Sequelize } from 'sequelize'; // Import Sequelize
 // import mongoose from 'mongoose'; // No longer directly needed for fixtures core DB ops
 import request from 'supertest';
-import { Sequelize } from 'sequelize'; // Import Sequelize
 
 import * as clickhouse from '@/clickhouse';
 import * as config from '@/config';
@@ -225,7 +225,9 @@ export const connectDB = async () => {
   if (!config.IS_CI) {
     // This check might need re-evaluation. For local tests, you might want to run against a test DB.
     // For now, keeping the spirit of "CI only" for destructive operations.
-    console.warn('Skipping DB connection and sync outside CI for safety. Ensure your DB is set up for tests.');
+    console.warn(
+      'Skipping DB connection and sync outside CI for safety. Ensure your DB is set up for tests.',
+    );
     return;
     // throw new Error('ONLY execute this in CI env 😈 !!!');
   }
@@ -263,7 +265,11 @@ export const clearDBCollections = async () => {
   try {
     const models = sequelize.models;
     for (const modelName in models) {
-      await models[modelName].destroy({ where: {}, truncate: true, cascade: true });
+      await models[modelName].destroy({
+        where: {},
+        truncate: true,
+        cascade: true,
+      });
     }
     // Alternatively, if connectDB uses sync({ force: true }), this might be redundant
     // or only needed if specific tests dirty the DB and run sequentially without resync.

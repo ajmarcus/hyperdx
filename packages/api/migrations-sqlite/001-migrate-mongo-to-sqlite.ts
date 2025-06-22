@@ -1,19 +1,19 @@
-import { MongoClient, Db as MongoDb, ObjectId } from 'mongodb';
+import { Db as MongoDb, MongoClient, ObjectId } from 'mongodb';
 import * as path from 'path';
-import * as config from '../src/config'; // Assuming config can be loaded
 
+import * as config from '../src/config'; // Assuming config can be loaded
 // Import all Sequelize models and the instance from the application's model index
 import {
-  sequelizeInstance as sequelize, // Renamed for clarity in this script
-  User,
-  Team,
-  TeamInvite,
-  Source,
-  SavedSearch,
-  Dashboard,
-  Connection,
   Alert,
   AlertHistory,
+  Connection,
+  Dashboard,
+  SavedSearch,
+  sequelizeInstance as sequelize, // Renamed for clarity in this script
+  Source,
+  Team,
+  TeamInvite,
+  User,
   Webhook,
 } from '../src/models'; // This now imports the initialized Sequelize instance and models
 
@@ -43,7 +43,8 @@ function transformDocument(doc: any, model: any): any {
 
   const attributes = model.getAttributes();
   for (const key in attributes) {
-    if (doc.hasOwnProperty(key) && key !== 'id') { // 'id' is already handled from '_id'
+    if (Object.prototype.hasOwnProperty.call(doc, key) && key !== 'id') {
+      // 'id' is already handled from '_id'
       if (doc[key] instanceof ObjectId) {
         newDoc[key] = doc[key].toString();
       } else {
@@ -57,27 +58,51 @@ function transformDocument(doc: any, model: any): any {
   if (doc.team && doc.team instanceof ObjectId) {
     newDoc.teamId = doc.team.toString();
   }
-  if (doc.source && doc.source instanceof ObjectId && model.name === 'SavedSearch') { // Be specific
+  if (
+    doc.source &&
+    doc.source instanceof ObjectId &&
+    model.name === 'SavedSearch'
+  ) {
+    // Be specific
     newDoc.sourceId = doc.source.toString();
   }
-  if (doc.connection && doc.connection instanceof ObjectId && model.name === 'Source') {
+  if (
+    doc.connection &&
+    doc.connection instanceof ObjectId &&
+    model.name === 'Source'
+  ) {
     newDoc.connectionId = doc.connection.toString();
   }
-  if (doc.alert && doc.alert instanceof ObjectId && model.name === 'AlertHistory') {
+  if (
+    doc.alert &&
+    doc.alert instanceof ObjectId &&
+    model.name === 'AlertHistory'
+  ) {
     newDoc.alertId = doc.alert.toString();
   }
-  if (doc.savedSearch && doc.savedSearch instanceof ObjectId && model.name === 'Alert') {
+  if (
+    doc.savedSearch &&
+    doc.savedSearch instanceof ObjectId &&
+    model.name === 'Alert'
+  ) {
     newDoc.savedSearchId = doc.savedSearch.toString();
   }
-  if (doc.dashboard && doc.dashboard instanceof ObjectId && model.name === 'Alert') {
+  if (
+    doc.dashboard &&
+    doc.dashboard instanceof ObjectId &&
+    model.name === 'Alert'
+  ) {
     newDoc.dashboardId = doc.dashboard.toString();
   }
   // If 'silenced.by' was a direct ObjectId field in Mongo for Alert model
-  if (doc.silenced && doc.silenced.by instanceof ObjectId && model.name === 'Alert') {
+  if (
+    doc.silenced &&
+    doc.silenced.by instanceof ObjectId &&
+    model.name === 'Alert'
+  ) {
     // Create a deep copy of silenced to avoid modifying the original doc's silenced property
     newDoc.silenced = { ...doc.silenced, by: doc.silenced.by.toString() };
   }
-
 
   // Add more sophisticated, model-specific transformations here if needed
   // e.g., renaming fields, restructuring embedded documents to JSONB, etc.
@@ -95,11 +120,11 @@ function transformDocument(doc: any, model: any): any {
     newDoc.silenced = silencedCopy;
   }
 
-
   // Remove fields from Mongo doc that don't exist in Sequelize model to avoid errors
   const modelAttributes = Object.keys(attributes);
   for (const key in newDoc) {
-    if (!modelAttributes.includes(key) && key !== 'id') { // allow 'id' as it's the PK
+    if (!modelAttributes.includes(key) && key !== 'id') {
+      // allow 'id' as it's the PK
       // A bit aggressive, could log instead. Or rely on Sequelize's `attributes` option in `bulkCreate`.
       // delete newDoc[key];
     }
@@ -107,10 +132,8 @@ function transformDocument(doc: any, model: any): any {
   // Delete the original mongoose version fields like __v
   delete newDoc.__v;
 
-
   return newDoc;
 }
-
 
 async function migrate() {
   let mongoClient: MongoClient | null = null;
@@ -133,7 +156,9 @@ async function migrate() {
     console.log('SQLite tables synchronized');
 
     for (const { mongoCollection, sequelizeModel } of modelsToMigrate) {
-      console.log(`Migrating collection: ${mongoCollection} to table: ${sequelizeModel.tableName}`);
+      console.log(
+        `Migrating collection: ${mongoCollection} to table: ${sequelizeModel.tableName}`,
+      );
       const collection = mongoDb.collection(mongoCollection);
       const documents = await collection.find({}).toArray();
 
@@ -142,7 +167,9 @@ async function migrate() {
         continue;
       }
 
-      const transformedDocuments = documents.map(doc => transformDocument(doc, sequelizeModel));
+      const transformedDocuments = documents.map(doc =>
+        transformDocument(doc, sequelizeModel),
+      );
 
       // @ts-ignore sequelize model is a valid type here
       // @ts-ignore sequelize model is a valid type here
@@ -150,11 +177,12 @@ async function migrate() {
         validate: true,
         ignoreDuplicates: true, // This skips rows with PK conflicts if the PK (id from MongoDB _id) already exists.
       });
-      console.log(`Successfully migrated ${documents.length} documents from ${mongoCollection} to ${sequelizeModel.tableName}`);
+      console.log(
+        `Successfully migrated ${documents.length} documents from ${mongoCollection} to ${sequelizeModel.tableName}`,
+      );
     }
 
     console.log('Data migration completed successfully!');
-
   } catch (error) {
     console.error('Error during migration:', error);
     // Log the model being processed if possible
@@ -172,4 +200,4 @@ async function migrate() {
   }
 }
 
-migrate();
+void migrate();

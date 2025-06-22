@@ -1,4 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
+
 import { sequelizeInstance } from './index'; // Assuming sequelizeInstance is exported from index.ts
 
 class User extends Model {

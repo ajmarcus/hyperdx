@@ -1,6 +1,7 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import { sequelizeInstance } from './index';
+
 import { AlertState } from './alert'; // Assuming AlertState is exported from alert.ts
+import { sequelizeInstance } from './index';
 // import Alert from './alert'; // For associations
 
 interface AlertHistoryLastValue {
@@ -22,12 +23,14 @@ class AlertHistory extends Model {
 
 AlertHistory.init(
   {
-    id: { // Adding a primary key, as it's good practice
+    id: {
+      // Adding a primary key, as it's good practice
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    alertId: { // Foreign key for Alert
+    alertId: {
+      // Foreign key for Alert
       type: DataTypes.UUID,
       allowNull: false,
       // references: { model: 'Alerts', key: 'id' } // Define association later

@@ -1,4 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
+
 import { sequelizeInstance } from './index';
 // import Team from './team'; // For associations
 
@@ -34,7 +35,8 @@ Dashboard.init(
       type: DataTypes.JSONB, // Using JSONB for Mixed type / complex array
       allowNull: false,
     },
-    teamId: { // Foreign key for Team
+    teamId: {
+      // Foreign key for Team
       type: DataTypes.UUID,
       allowNull: false,
       // references: { model: 'Teams', key: 'id' } // Define association later

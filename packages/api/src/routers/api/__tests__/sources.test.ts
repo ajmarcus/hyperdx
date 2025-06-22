@@ -100,14 +100,18 @@ describe('sources router', () => {
       teamId: team.id, // Use teamId and team.id
     });
 
-    const updatedSourceData = { // Prepare data for update
+    const updatedSourceData = {
+      // Prepare data for update
       ...MOCK_SOURCE, // Include other fields from MOCK_SOURCE that are part of the update
       name: 'Updated Name',
       // id: source.id, // id is usually not sent in body for PUT, it's in URL
       // teamId: team.id // teamId typically shouldn't change or is handled by API
     };
 
-    await agent.put(`/sources/${source.id}`).send(updatedSourceData).expect(200); // Use source.id
+    await agent
+      .put(`/sources/${source.id}`)
+      .send(updatedSourceData)
+      .expect(200); // Use source.id
 
     // Verify source was updated using Sequelize syntax
     const updatedSourceFromDB = await Source.findByPk(source.id); // Use findByPk and source.id
@@ -121,9 +125,10 @@ describe('sources router', () => {
 
     await agent
       .put(`/sources/${nonExistentId}`)
-      .send({ // Send a valid source body structure for an update attempt
+      .send({
+        // Send a valid source body structure for an update attempt
         ...MOCK_SOURCE,
-        name: "Trying to update non-existent",
+        name: 'Trying to update non-existent',
         // id: nonExistentId, // Not typically in body
       })
       .expect(404);

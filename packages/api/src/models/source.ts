@@ -1,9 +1,7 @@
+import { MetricsDataType, SourceKind } from '@hyperdx/common-utils/dist/types'; // Assuming these enums are available
 import { DataTypes, Model } from 'sequelize';
+
 import { sequelizeInstance } from './index';
-import {
-  MetricsDataType,
-  SourceKind,
-} from '@hyperdx/common-utils/dist/types'; // Assuming these enums are available
 
 // import Team from './team'; // For associations
 // import Connection from './connection'; // For associations
@@ -88,7 +86,10 @@ Source.init(
     },
     timestampValueExpression: { type: DataTypes.STRING, allowNull: true },
     name: { type: DataTypes.STRING, allowNull: true },
-    displayedTimestampValueExpression: { type: DataTypes.STRING, allowNull: true },
+    displayedTimestampValueExpression: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     implicitColumnExpression: { type: DataTypes.STRING, allowNull: true },
     serviceNameExpression: { type: DataTypes.STRING, allowNull: true },
     bodyExpression: { type: DataTypes.TEXT, allowNull: true }, // TEXT for potentially long expressions

@@ -24,6 +24,6 @@
     "strict": true,
     "target": "ES2022"
   },
-  "include": ["src", "migrations", "scripts"],
+  "include": ["src", "migrations", "migrations-sqlite", "scripts"],
   "exclude": ["node_modules", "**/*.test.ts"]
 }

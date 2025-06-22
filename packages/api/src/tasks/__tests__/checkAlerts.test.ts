@@ -346,7 +346,8 @@ describe('checkAlerts', () => {
       jest.spyOn(slack, 'postMessageToWebhook').mockResolvedValue(null as any);
 
       const team = await createTeam({ name: 'My Team' }); // Assumes createTeam returns Sequelize model
-      const webhook = await Webhook.create({ // Use Sequelize create
+      const webhook = await Webhook.create({
+        // Use Sequelize create
         teamId: team.id, // Use teamId and team.id
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
@@ -368,7 +369,8 @@ describe('checkAlerts', () => {
           },
         },
         title: 'Alert for "My Search" - 10 lines found',
-        team: { // Ensure this team object structure is what renderAlertTemplate expects
+        team: {
+          // Ensure this team object structure is what renderAlertTemplate expects
           id: team.id.toString(),
         },
       });
@@ -383,7 +385,8 @@ describe('checkAlerts', () => {
         .mockResolvedValueOnce(null as any);
 
       const team = await createTeam({ name: 'My Team' });
-      await Webhook.create({ // Use Sequelize create
+      await Webhook.create({
+        // Use Sequelize create
         teamId: team.id, // Use teamId and team.id
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
@@ -442,7 +445,8 @@ describe('checkAlerts', () => {
         .mockResolvedValueOnce(null as any);
 
       const team = await createTeam({ name: 'My Team' });
-      await Webhook.create({ // Use Sequelize create
+      await Webhook.create({
+        // Use Sequelize create
         teamId: team.id, // Use teamId and team.id
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
@@ -502,13 +506,15 @@ describe('checkAlerts', () => {
       jest.spyOn(slack, 'postMessageToWebhook').mockResolvedValue(null as any);
 
       const team = await createTeam({ name: 'My Team' });
-      await Webhook.create({ // Use Sequelize create
+      await Webhook.create({
+        // Use Sequelize create
         teamId: team.id, // Use teamId and team.id
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
         name: 'My_Webhook',
       });
-      await Webhook.create({ // Use Sequelize create
+      await Webhook.create({
+        // Use Sequelize create
         teamId: team.id, // Use teamId and team.id
         service: 'slack',
         url: 'https://hooks.slack.com/services/456',
@@ -694,20 +700,23 @@ describe('checkAlerts', () => {
         },
       ]);
 
-      const webhook = await Webhook.create({ // Sequelize create
+      const webhook = await Webhook.create({
+        // Sequelize create
         teamId: team.id, // Use teamId
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
         name: 'My Webhook',
       });
-      const connection = await Connection.create({ // Assuming Connection model is already Sequelize
+      const connection = await Connection.create({
+        // Assuming Connection model is already Sequelize
         teamId: team.id, // Use teamId
         name: 'Default',
         host: config.CLICKHOUSE_HOST, // These should be from your test config
         username: config.CLICKHOUSE_USER,
         password: config.CLICKHOUSE_PASSWORD,
       });
-      const source = await Source.create({ // Assuming Source model is already Sequelize
+      const source = await Source.create({
+        // Assuming Source model is already Sequelize
         kind: 'log',
         teamId: team.id, // Use teamId
         from: {
@@ -718,7 +727,8 @@ describe('checkAlerts', () => {
         connectionId: connection.id, // Use connectionId
         name: 'Logs',
       });
-      const savedSearch = await SavedSearch.create({ // Sequelize create
+      const savedSearch = await SavedSearch.create({
+        // Sequelize create
         teamId: team.id, // Use teamId
         name: 'My Search',
         select: 'Body',
@@ -728,7 +738,8 @@ describe('checkAlerts', () => {
         sourceId: source.id, // Use sourceId
         tags: ['test'],
       });
-      const alert = await createAlert(team.id, { // Pass team.id
+      const alert = await createAlert(team.id, {
+        // Pass team.id
         source: AlertSource.SAVED_SEARCH,
         channel: {
           type: 'webhook',
@@ -745,7 +756,7 @@ describe('checkAlerts', () => {
         include: [
           { model: Team, as: 'team' }, // Adjust 'as' based on your association alias in Alert model
           { model: SavedSearch, as: 'savedSearch' }, // Adjust 'as'
-        ]
+        ],
       });
 
       // should fetch 5m of logs
@@ -769,7 +780,8 @@ describe('checkAlerts', () => {
       expect(enhancedAlert.state).toBe('OK');
 
       // check alert history
-      const alertHistories = await AlertHistory.findAll({ // Sequelize findAll
+      const alertHistories = await AlertHistory.findAll({
+        // Sequelize findAll
         where: { alertId: alert.id }, // Use alertId and alert.id
         order: [['createdAt', 'ASC']],
       });
@@ -852,7 +864,8 @@ describe('checkAlerts', () => {
         },
       ]);
 
-      const webhook = await Webhook.create({ // Sequelize create
+      const webhook = await Webhook.create({
+        // Sequelize create
         teamId: team.id, // Use teamId
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
@@ -876,10 +889,12 @@ describe('checkAlerts', () => {
         connectionId: connection.id, // Use connectionId
         name: 'Logs',
       });
-      const dashboard = await Dashboard.create({ // Sequelize create
+      const dashboard = await Dashboard.create({
+        // Sequelize create
         name: 'My Dashboard',
         teamId: team.id, // Use teamId
-        tiles: [ // Ensure MOCK_TILE structure is compatible or transform as needed
+        tiles: [
+          // Ensure MOCK_TILE structure is compatible or transform as needed
           {
             id: '17quud', // This ID for a tile might need to be UUID if you enforce that, or ensure it's handled as string
             x: 0,
@@ -905,7 +920,8 @@ describe('checkAlerts', () => {
           },
         ],
       });
-      const alert = await createAlert(team.id, { // Pass team.id
+      const alert = await createAlert(team.id, {
+        // Pass team.id
         source: AlertSource.TILE,
         channel: {
           type: 'webhook',
@@ -918,11 +934,12 @@ describe('checkAlerts', () => {
         tileId: '17quud',
       });
 
-      const enhancedAlert: any = await Alert.findByPk(alert.id, { // Sequelize findByPk
+      const enhancedAlert: any = await Alert.findByPk(alert.id, {
+        // Sequelize findByPk
         include: [
           { model: Team, as: 'team' }, // Adjust 'as' based on your association alias
           { model: Dashboard, as: 'dashboard' }, // Adjust 'as'
-        ]
+        ],
       });
 
       // should fetch 5m of logs
@@ -941,7 +958,8 @@ describe('checkAlerts', () => {
       expect(enhancedAlert.state).toBe('OK');
 
       // check alert history
-      const alertHistories = await AlertHistory.findAll({ // Sequelize findAll
+      const alertHistories = await AlertHistory.findAll({
+        // Sequelize findAll
         where: { alertId: alert.id }, // Use alertId and alert.id
         order: [['createdAt', 'ASC']],
       });
@@ -1016,7 +1034,8 @@ describe('checkAlerts', () => {
         },
       ]);
 
-      const webhook = await Webhook.create({ // Sequelize create
+      const webhook = await Webhook.create({
+        // Sequelize create
         teamId: team.id, // Use teamId
         service: 'generic',
         url: 'https://webhook.site/123',
@@ -1045,7 +1064,8 @@ describe('checkAlerts', () => {
         connectionId: connection.id, // Use connectionId
         name: 'Logs',
       });
-      const dashboard = await Dashboard.create({ // Sequelize create
+      const dashboard = await Dashboard.create({
+        // Sequelize create
         name: 'My Dashboard',
         teamId: team.id, // Use teamId
         tiles: [
@@ -1074,7 +1094,8 @@ describe('checkAlerts', () => {
           },
         ],
       });
-      const alert = await createAlert(team.id, { // Pass team.id
+      const alert = await createAlert(team.id, {
+        // Pass team.id
         source: AlertSource.TILE,
         channel: {
           type: 'webhook',
@@ -1087,11 +1108,12 @@ describe('checkAlerts', () => {
         tileId: '17quud',
       });
 
-      const enhancedAlert: any = await Alert.findByPk(alert.id, { // Sequelize findByPk
+      const enhancedAlert: any = await Alert.findByPk(alert.id, {
+        // Sequelize findByPk
         include: [
           { model: Team, as: 'team' }, // Adjust 'as' based on your association alias
           { model: Dashboard, as: 'dashboard' }, // Adjust 'as'
-        ]
+        ],
       });
 
       // should fetch 5m of logs
@@ -1110,7 +1132,8 @@ describe('checkAlerts', () => {
       expect(enhancedAlert.state).toBe('OK');
 
       // check alert history
-      const alertHistories = await AlertHistory.findAll({ // Sequelize findAll
+      const alertHistories = await AlertHistory.findAll({
+        // Sequelize findAll
         where: { alertId: alert.id }, // Use alertId and alert.id
         order: [['createdAt', 'ASC']],
       });
@@ -1168,7 +1191,8 @@ describe('checkAlerts', () => {
 
       await bulkInsertMetricsGauge(gaugePointsA);
 
-      const webhook = await Webhook.create({ // Sequelize create
+      const webhook = await Webhook.create({
+        // Sequelize create
         teamId: team.id, // Use teamId
         service: 'slack',
         url: 'https://hooks.slack.com/services/123',
@@ -1188,7 +1212,8 @@ describe('checkAlerts', () => {
           databaseName: DEFAULT_DATABASE,
           tableName: '', // Table name might be needed depending on source kind
         },
-        metricTables: { // Ensure this structure matches Sequelize model
+        metricTables: {
+          // Ensure this structure matches Sequelize model
           gauge: DEFAULT_METRICS_TABLE.GAUGE,
           histogram: DEFAULT_METRICS_TABLE.HISTOGRAM,
           sum: DEFAULT_METRICS_TABLE.SUM,
@@ -1197,7 +1222,8 @@ describe('checkAlerts', () => {
         connectionId: connection.id, // Use connectionId
         name: 'Metrics',
       });
-      const dashboard = await Dashboard.create({ // Sequelize create
+      const dashboard = await Dashboard.create({
+        // Sequelize create
         name: 'My Dashboard',
         teamId: team.id, // Use teamId
         tiles: [
@@ -1225,7 +1251,8 @@ describe('checkAlerts', () => {
           },
         ],
       });
-      const alert = await createAlert(team.id, { // Pass team.id
+      const alert = await createAlert(team.id, {
+        // Pass team.id
         source: AlertSource.TILE,
         channel: {
           type: 'webhook',
@@ -1238,11 +1265,12 @@ describe('checkAlerts', () => {
         tileId: '17quud',
       });
 
-      const enhancedAlert: any = await Alert.findByPk(alert.id, { // Sequelize findByPk
+      const enhancedAlert: any = await Alert.findByPk(alert.id, {
+        // Sequelize findByPk
         include: [
           { model: Team, as: 'team' }, // Adjust 'as'
           { model: Dashboard, as: 'dashboard' }, // Adjust 'as'
-        ]
+        ],
       });
 
       // should fetch 5m of logs
@@ -1261,7 +1289,8 @@ describe('checkAlerts', () => {
       expect(enhancedAlert.state).toBe('OK');
 
       // check alert history
-      const alertHistories = await AlertHistory.findAll({ // Sequelize findAll
+      const alertHistories = await AlertHistory.findAll({
+        // Sequelize findAll
         where: { alertId: alert.id }, // Use alertId and alert.id
         order: [['createdAt', 'ASC']],
       });
