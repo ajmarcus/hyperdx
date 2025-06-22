@@ -1,51 +1,60 @@
-import mongoose, { Schema } from 'mongoose';
-// @ts-ignore don't install the @types for this package, as it conflicts with mongoose
-import passportLocalMongoose from 'passport-local-mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import { DataTypes, Model } from 'sequelize';
+import { sequelizeInstance } from './index'; // Assuming sequelizeInstance is exported from index.ts
 
-type ObjectId = mongoose.Types.ObjectId;
+class User extends Model {
+  public id!: string;
+  public email!: string;
+  public password!: string;
+  public name!: string;
+  public avatar?: string;
+  public googleId?: string;
+  public githubId?: string;
 
-export interface IUser {
-  _id: ObjectId;
-  accessKey: string;
-  createdAt: Date;
-  email: string;
-  name: string;
-  team: ObjectId;
+  // Timestamps
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
-export type UserDocument = mongoose.HydratedDocument<IUser>;
-
-const UserSchema = new Schema(
+User.init(
   {
-    name: String,
-    email: {
-      type: String,
-      required: true,
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
-    accessKey: {
-      type: String,
-      default: function genUUID() {
-        return uuidv4();
-      },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    githubId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
     },
   },
   {
-    timestamps: true,
+    sequelize: sequelizeInstance,
+    modelName: 'User', // This will be the table name
+    timestamps: true, // Enable timestamps
   },
 );
 
-UserSchema.virtual('hasPasswordAuth').get(function (this: IUser) {
-  return true;
-});
-
-UserSchema.plugin(passportLocalMongoose, {
-  usernameField: 'email',
-  usernameLowerCase: true,
-  usernameCaseInsensitive: true,
-});
-
-UserSchema.index({ email: 1 }, { unique: true });
-
-export default mongoose.model<IUser>('User', UserSchema);
+export default User;

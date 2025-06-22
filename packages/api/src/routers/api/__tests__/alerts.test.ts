@@ -64,7 +64,7 @@ describe('alerts router', () => {
         }),
       )
       .expect(200);
-    await agent.delete(`/alerts/${alert.body.data._id}`).expect(200);
+    await agent.delete(`/alerts/${alert.body.data.id}`).expect(200); // Use .id
     const alerts = await agent.get('/alerts').expect(200);
     expect(alerts.body.data.length).toBe(0);
   });
@@ -85,10 +85,11 @@ describe('alerts router', () => {
       )
       .expect(200);
     await agent
-      .put(`/alerts/${alert.body.data._id}`)
+      .put(`/alerts/${alert.body.data.id}`) // Use .id
       .send({
-        ...alert.body.data,
-        dashboardId: dashboard.body.id, // because alert.body.data stores 'dashboard' instead of 'dashboardId'
+        ...alert.body.data, // Spread the existing alert data
+        // Ensure dashboardId is correctly sourced if alert.body.data.dashboard is an object
+        dashboardId: dashboard.body.id,
         threshold: 10,
       })
       .expect(200);
@@ -111,7 +112,7 @@ describe('alerts router', () => {
           .post('/alerts')
           .send(
             makeAlertInput({
-              dashboardId: dashboard._id,
+              dashboardId: dashboard.id, // Use .id
               tileId: tile.id,
             }),
           )

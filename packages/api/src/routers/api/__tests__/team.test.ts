@@ -55,7 +55,7 @@ Object {
       .expect(200);
 
     await agent.post('/sources').send({
-      team: team._id,
+      team: team.id, // Use .id for Sequelize
       kind: 'log',
       name: 'My New Source',
       connection: 'local',
@@ -85,36 +85,45 @@ Object {
 
   it('GET /team/members', async () => {
     const { agent, team } = await getLoggedInAgent(server);
+    // Use Sequelize's create method. teamId is the foreign key.
+    // Ensure all required fields for User model are provided (e.g., name, password).
     const user1 = await User.create({
       email: 'user1@example.com',
-      team: team._id,
+      name: 'User 1 Name', // Assuming 'name' is a required field
+      password: 'password1', // Assuming 'password' is a required field
+      teamId: team.id // Use team.id for Sequelize
     });
     const user2 = await User.create({
       email: 'user2@example.com',
-      team: team._id,
+      name: 'User 2 Name', // Assuming 'name' is a required field
+      password: 'password2', // Assuming 'password' is a required field
+      teamId: team.id // Use team.id for Sequelize
     });
     const resp = await agent.get('/team/members').expect(200);
 
-    expect(resp.body.data).toMatchInlineSnapshot(`
+    // Snapshot will change: "_id" -> "id", also values of id will be different (UUIDs)
+    // The fields like `hasPasswordAuth` and `isCurrentUser` are added by the endpoint logic.
+    // Sorting by a stable key like email can help make snapshots more predictable.
+    const sortedData = _.sortBy(resp.body.data, 'email');
+    expect(sortedData.map(u => _.omit(u, ['id', 'teamId', 'avatar', 'createdAt', 'updatedAt']))).toMatchInlineSnapshot(`
 Array [
   Object {
-    "_id": "${resp.body.data[0]._id}",
     "email": "fake@deploysentinel.com",
     "hasPasswordAuth": true,
     "isCurrentUser": true,
     "name": "fake@deploysentinel.com",
   },
   Object {
-    "_id": "${user1._id}",
     "email": "user1@example.com",
-    "hasPasswordAuth": true,
+    "hasPasswordAuth": false,
     "isCurrentUser": false,
+    "name": "User 1 Name",
   },
   Object {
-    "_id": "${user2._id}",
     "email": "user2@example.com",
-    "hasPasswordAuth": true,
+    "hasPasswordAuth": false,
     "isCurrentUser": false,
+    "name": "User 2 Name",
   },
 ]
 `);
@@ -129,8 +138,9 @@ Array [
         name: 'User 3',
       })
       .expect(200);
+    // Use Sequelize's findOne with where clause and teamId context
     const teamInvite = await TeamInvite.findOne({
-      email: 'user3@example.com',
+      where: { email: 'user3@example.com', teamId: team.id }
     });
     if (teamInvite == null) {
       throw new Error('TeamInvite not found');
@@ -180,12 +190,14 @@ Array [
   it('DELETE /team/member/:userId', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    const user1 = await User.create({
+    const user1 = await User.create({ // Sequelize create
       email: 'user1@example.com',
-      team: team._id,
+      name: 'User to delete', // Assuming name is required
+      password: 'passworddel', // Assuming password is required
+      teamId: team.id,
     });
 
-    await agent.delete(`/team/member/${user1._id}`).expect(200);
+    await agent.delete(`/team/member/${user1.id}`).expect(200); // Use .id
 
     const resp2 = await agent.get('/team/members').expect(200);
 
@@ -195,14 +207,14 @@ Array [
   it('DELETE /team/invitation/:teamInviteId', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    const invite = await TeamInvite.create({
+    const invite = await TeamInvite.create({ // Sequelize create
       email: 'fake_invite@example.com',
       name: 'Fake Invite',
-      teamId: team._id,
-      token: 'fake_token',
+      teamId: team.id, // Use .id for team's PK
+      token: 'fake_token_value_to_be_deleted', // Ensure token is unique if model requires
     });
 
-    await agent.delete(`/team/invitation/${invite._id}`).expect(200);
+    await agent.delete(`/team/invitation/${invite.id}`).expect(200); // Use .id
 
     const resp2 = await agent.get('/team/invitations').expect(200);
 

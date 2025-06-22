@@ -1,7 +1,8 @@
-import { Types } from 'mongoose';
+// import { Types } from 'mongoose'; // Remove Mongoose specific import
+import { v4 as uuidv4 } from 'uuid'; // For generating UUIDs
 
 import { getLoggedInAgent, getServer } from '@/fixtures';
-import Webhook, { WebhookService } from '@/models/webhook';
+import Webhook, { WebhookService } from '@/models/webhook'; // Now a Sequelize model
 
 const MOCK_WEBHOOK = {
   name: 'Test Webhook',
@@ -31,10 +32,10 @@ describe('webhooks router', () => {
   it('GET / - returns webhooks filtered by service', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    // Create test webhook
+    // Create test webhook using Sequelize syntax
     await Webhook.create({
       ...MOCK_WEBHOOK,
-      team: team._id,
+      teamId: team.id, // Use teamId and team.id
     });
 
     // Create a webhook for a different service
@@ -42,7 +43,7 @@ describe('webhooks router', () => {
       ...MOCK_WEBHOOK,
       service: WebhookService.Generic,
       url: 'https://example.com/webhook/generic',
-      team: team._id,
+      teamId: team.id, // Use teamId and team.id
     });
 
     // Get webhooks for Slack
@@ -93,18 +94,18 @@ describe('webhooks router', () => {
       description: MOCK_WEBHOOK.description,
     });
 
-    // Verify webhook was created in database
-    const webhooks = await Webhook.find({});
+    // Verify webhook was created in database using Sequelize syntax
+    const webhooks = await Webhook.findAll({});
     expect(webhooks).toHaveLength(1);
   });
 
   it('POST / - returns 400 when webhook with same URL already exists', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    // Create webhook first
+    // Create webhook first using Sequelize syntax
     await Webhook.create({
       ...MOCK_WEBHOOK,
-      team: team._id,
+      teamId: team.id, // Use teamId and team.id
     });
 
     // Try to create the same webhook again
@@ -115,8 +116,8 @@ describe('webhooks router', () => {
 
     expect(response.body.message).toBe('Webhook already exists');
 
-    // Verify only one webhook exists
-    const webhooks = await Webhook.find({});
+    // Verify only one webhook exists using Sequelize syntax
+    const webhooks = await Webhook.findAll({});
     expect(webhooks).toHaveLength(1);
   });
 
@@ -153,23 +154,23 @@ describe('webhooks router', () => {
   it('DELETE /:id - deletes a webhook', async () => {
     const { agent, team } = await getLoggedInAgent(server);
 
-    // Create test webhook
+    // Create test webhook using Sequelize syntax
     const webhook = await Webhook.create({
       ...MOCK_WEBHOOK,
-      team: team._id,
+      teamId: team.id, // Use teamId and team.id
     });
 
-    await agent.delete(`/webhooks/${webhook._id}`).expect(200);
+    await agent.delete(`/webhooks/${webhook.id}`).expect(200); // Use webhook.id
 
-    // Verify webhook was deleted
-    const deletedWebhook = await Webhook.findById(webhook._id);
+    // Verify webhook was deleted using Sequelize syntax
+    const deletedWebhook = await Webhook.findByPk(webhook.id); // Use findByPk and webhook.id
     expect(deletedWebhook).toBeNull();
   });
 
   it('DELETE /:id - returns 200 when webhook does not exist', async () => {
     const { agent } = await getLoggedInAgent(server);
 
-    const nonExistentId = new Types.ObjectId().toString();
+    const nonExistentId = uuidv4(); // Use UUID for ID
 
     // This will succeed even if the ID doesn't exist, consistent with the implementation
     await agent.delete(`/webhooks/${nonExistentId}`).expect(200);
